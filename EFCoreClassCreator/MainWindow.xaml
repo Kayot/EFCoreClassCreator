@@ -1,0 +1,55 @@
+﻿<Window x:Class="EFCoreClassCreator.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:EFCoreClassCreator"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="768" Width="1024">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="22"/>
+            <RowDefinition Height="22"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="22"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="80"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Border BorderBrush="Black" BorderThickness="1">
+                <TextBlock Text="Login Details"/>
+            </Border>
+            <TextBox Grid.Column="1" Name="TextBox_Login_Details" Text="" />
+        </Grid>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="70"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="40"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="50"/>
+                <ColumnDefinition Width="70"/>
+                <ColumnDefinition Width="70"/>
+            </Grid.ColumnDefinitions>
+            <Border BorderBrush="Black" BorderThickness="1">
+                <TextBlock Text="namespace"/>
+            </Border>
+            <TextBox Name="TextBox_Namespace" Grid.Column="1" Text="SentriLockDISCore" />
+            <Border Grid.Column="2" BorderBrush="Black" BorderThickness="1">
+                <TextBlock Text="class"/>
+            </Border>
+            <TextBox Name="TextBox_ClassName" Grid.Column="3" Text="AssocList" />
+            <Border Grid.Column="4" BorderBrush="Black" BorderThickness="1">
+                <TextBlock Text="DB Type"/>
+            </Border>
+            <RadioButton Grid.Column="5" GroupName="DBType" Name="RadioButton_MySQL" Content="MySQL" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="True"/>
+            <RadioButton Grid.Column="6" GroupName="DBType" Name="RadioButton_MSSQL" Content="MSSQL" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Grid>
+        <TextBox Grid.Row="2" Name="TextBox_SQLCode" AcceptsReturn="True" AcceptsTab="True" />
+        <Button Grid.Row="3" Content="Generate Class Code" Click="Button_Generate_Class_Code_Click" />
+        <TextBox Grid.Row="4" Name="TextBox_ClassCode" AcceptsReturn="True" AcceptsTab="True" FontFamily="Courier New"  />
+    </Grid>
+</Window>
