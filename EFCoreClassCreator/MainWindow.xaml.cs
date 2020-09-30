@@ -1,7 +1,8 @@
-﻿using MySqlConnector;
+﻿using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
 using System.Text;
 using System.Windows;
 using System.Windows.Documents;
@@ -14,85 +15,126 @@ namespace EFCoreClassCreator
     public partial class MainWindow : Window
     {
         public MainWindow() => InitializeComponent();
+        public List<string> Parameters = new List<string>();
 
         private void Button_Generate_Class_Code_Click(object sender, RoutedEventArgs e)
         {
             DataTable schemaTable;
-            using (MySqlConnection DBConnection = new MySqlConnection(TextBox_Login_Details.Text))
+            List<DataArray> DataExtract = new();
+            string MyPreFix = "";
+            if (RadioButton_MySQL.IsChecked==true)
             {
-                using (MySqlCommand DBCommand = new MySqlCommand(TextBox_SQLCode.Text, DBConnection))
+                MyPreFix = "My";
+                using (MySqlConnection DBConnection = new MySqlConnection(TextBox_Login_Details.Text))
                 {
-                    DBConnection.Open();
-                    MySqlDataReader DBReader;
-                    DBReader = DBCommand.ExecuteReader(CommandBehavior.KeyInfo);
-                    schemaTable = DBReader.GetSchemaTable();
-                    DBConnection.Close();
+                    using (MySqlCommand DBCommand = new MySqlCommand(TextBox_SQLCode.Text, DBConnection))
+                    {
+                        DBConnection.Open();
+                        MySqlDataReader DBReader;
+                        DBReader = DBCommand.ExecuteReader(CommandBehavior.KeyInfo);
+                        schemaTable = DBReader.GetSchemaTable();
+                        DBConnection.Close();
+                    }
+                }                
+                foreach (DataRow item in schemaTable.Rows)
+                {
+                    DataExtract.Add(new DataArray()
+                    {
+                        ColName = item.ItemArray[0].ToString(),
+                        ColType = item.ItemArray[11].ToString(),
+                        ColLength = Convert.ToInt32(item.ItemArray[2]),
+                        ColNullable = Convert.ToBoolean(item.ItemArray[12])
+                    });
                 }
             }
-            List<DataArray> DataSet = new();
-            foreach (DataRow item in schemaTable.Rows)
+            else
             {
-                DataSet.Add(new DataArray()
+                using (SqlConnection DBConnection = new SqlConnection(TextBox_Login_Details.Text))
                 {
-                    ColName = item.ItemArray[0].ToString(),
-                    ColType = item.ItemArray[11].ToString(),
-                    ColLength = Convert.ToInt32(item.ItemArray[2]),
-                    ColNullable = Convert.ToBoolean(item.ItemArray[12])
-                });
+                    using (SqlCommand DBCommand = new SqlCommand(TextBox_SQLCode.Text, DBConnection))
+                    {
+                        DBConnection.Open();
+                        SqlDataReader DBReader;
+                        DBReader = DBCommand.ExecuteReader(CommandBehavior.KeyInfo);
+                        schemaTable = DBReader.GetSchemaTable();
+                        DBConnection.Close();
+                    }
+                }               
+                foreach (DataRow item in schemaTable.Rows)
+                {
+                    DataExtract.Add(new DataArray()
+                    {
+                        ColName = item.ItemArray[0].ToString(),
+                        ColType = item.ItemArray[12].ToString(),
+                        ColLength = Convert.ToInt32(item.ItemArray[2]),
+                        ColNullable = Convert.ToBoolean(item.ItemArray[13])
+                    });
+                }
             }
 
             StringBuilder Output = new();
 
-            Output.AppendLine("using MySql.Data.MySqlClient;");
+            if (RadioButton_MySQL.IsChecked == true)
+            {
+                Output.AppendLine($"using MySql.Data.MySqlClient;");
+            }
+            else
+            {
+                Output.AppendLine($"using System.Data.SqlClient;");
+            }
+
             Output.AppendLine("using System;");
             Output.AppendLine("using System.Collections.Generic;");
             Output.AppendLine();
 
             Output.AppendLine("namespace " + TextBox_Namespace.Text);
             Output.AppendLine("{");
-            Output.AppendLine("public class " + TextBox_ClassName.Text);
+            Output.AppendLine("public static class " + TextBox_ClassName.Text);
             Output.AppendLine("{");
             Output.AppendLine($"public static List<data{TextBox_ClassName.Text}> DN{TextBox_ClassName.Text}()");
             Output.AppendLine("{");
-            Output.AppendLine($"List<data{TextBox_ClassName.Text}> Data = new();");
+            Output.AppendLine($"List<data{TextBox_ClassName.Text}> Data = new List<data{TextBox_ClassName.Text}>();");
             Output.AppendLine($"string ConnectionString = \"{TextBox_Login_Details.Text}\";");
-            Output.AppendLine("using (MySqlConnection DBConnection = new MySqlConnection(ConnectionString))");
+            Output.AppendLine($"using ({MyPreFix}SqlConnection DBConnection = new {MyPreFix}SqlConnection(ConnectionString))");
             Output.AppendLine("{");
             Output.AppendLine("DBConnection.Open();");
-            Output.AppendLine($"MySqlCommand DataCommand = new MySqlCommand(@\"{TextBox_SQLCode.Text}\", DBConnection);");
+            Output.AppendLine($"{MyPreFix}SqlCommand DataCommand = new {MyPreFix}SqlCommand(@\"{TextBox_SQLCode.Text}\", DBConnection);");
             Output.AppendLine("//DataCommand.Parameters.AddWithValue(\"@\", \"\");");
-            Output.AppendLine("MySqlDataReader myReader = DataCommand.ExecuteReader();");
-            Output.AppendLine("while (myReader.Read())");
+            Output.AppendLine($"{MyPreFix}SqlDataReader DataReader = DataCommand.ExecuteReader();");
+            Output.AppendLine("while (DataReader.Read())");
             Output.AppendLine("{");
             Output.AppendLine($"Data.Add(new data{TextBox_ClassName.Text}()");
             Output.AppendLine("{");
-
             List<string> Params = new();
-            foreach (var item in DataSet)
+            foreach (var item in DataExtract)
             {
 
-                //RETSLockLastUpdated = myReader["RETSLockLastUpdated"] != DBNull.Value ? myReader.GetDateTime("RETSLockLastUpdated") : null,
+                //RETSLockLastUpdated = DataReader["RETSLockLastUpdated"] != DBNull.Value ? DataReader.GetDateTime("RETSLockLastUpdated") : null,
 
                 switch (item.ColType)
                 {
                     case "System.String":
-                        Params.Add(item.ColName + " = myReader[\"" + item.ColName + "\"].ToString()");
+                        Params.Add(item.ColName + " = DataReader[\"" + item.ColName + "\"].ToString()");
                         break;
                     case "System.SByte":
                         if (item.ColLength == 1)
                         {
-                            Params.Add(item.ColName + " = myReader[\"" + item.ColName + "\"].ToString() == \"1\"");
+                            Params.Add(item.ColName + " = DataReader[\"" + item.ColName + "\"].ToString() == \"1\"");
                         }
                         else
                         {
-                            Params.Add(item.ColName + " = myReader.GetInt16(\"" + item.ColName + "\")");
+                            Params.Add(item.ColName + " = DataReader.GetInt16(\"" + item.ColName + "\")");
                         }
                         break;
                     case "System.Int32":
-                        Params.Add(item.ColName + " = myReader.GetInt32(\"" + item.ColName + "\")");
+                        Params.Add(item.ColName + " = DataReader.GetInt32(\"" + item.ColName + "\")");
                         break;
                     case "System.DateTime":
-                        Params.Add(item.ColName + " = myReader.GetDateTime(\"" + item.ColName + "\")");
+                        //Params.Add(item.ColName + " = myReader.GetDateTime(\"" + item.ColName + "\")");
+                        //DataReader.GetOrdinal("column")
+
+                        Params.Add(item.ColName + " = DataReader[\""+ item.ColName + "\"] != DBNull.Value ? DataReader.GetDateTime(DataReader.GetOrdinal(\"" + item.ColName + "\")) : (DateTime?)null");
+
                         break;
                     default:
                         Params.Add($"// No Key Match to {item.ColType} {item.ColName}");
@@ -104,7 +146,7 @@ namespace EFCoreClassCreator
 
             Output.AppendLine("});");
             Output.AppendLine("}");
-            Output.AppendLine("myReader.Close();");
+            Output.AppendLine("DataReader.Close();");
             Output.AppendLine("DBConnection.Close();");
             Output.AppendLine("}");
             Output.AppendLine("return Data;");
@@ -124,7 +166,7 @@ namespace EFCoreClassCreator
             Output.AppendLine("public class data" + TextBox_ClassName.Text);
             Output.AppendLine("{");
 
-            foreach (var item in DataSet)
+            foreach (var item in DataExtract)
             {
                 string NullMark = "";
                 if (item.ColNullable && item.ColType != "System.String") { NullMark = "?"; }
@@ -156,6 +198,15 @@ namespace EFCoreClassCreator
             public string ColType { get; set; }
             public int ColLength { get; set; }
             public bool ColNullable { get; set; }
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (System.IO.File.Exists("settings.ini"))
+            {
+                TextBox_Login_Details.Text = System.IO.File.ReadAllText("settings.ini");
+            }
+            DataGrid_Parameters.ItemsSource = Parameters;
         }
     }
 }

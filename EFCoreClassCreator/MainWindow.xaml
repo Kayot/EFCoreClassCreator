@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:EFCoreClassCreator"
         mc:Ignorable="d"
-        Title="MainWindow" Height="768" Width="1024">
+        Title="MainWindow" Height="768" Width="1024" Loaded="Window_Loaded">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="22"/>
@@ -14,6 +14,10 @@
             <RowDefinition Height="22"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="70*"/>
+            <ColumnDefinition Width="30*"/>
+        </Grid.ColumnDefinitions>
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="80"/>
@@ -51,5 +55,14 @@
         <TextBox Grid.Row="2" Name="TextBox_SQLCode" AcceptsReturn="True" AcceptsTab="True" />
         <Button Grid.Row="3" Content="Generate Class Code" Click="Button_Generate_Class_Code_Click" />
         <TextBox Grid.Row="4" Name="TextBox_ClassCode" AcceptsReturn="True" AcceptsTab="True" FontFamily="Courier New"  />
+        <Border Grid.Column="1" Grid.Row="0" BorderBrush="Black" BorderThickness="1">
+            <TextBlock Text="Parameters"/>
+        </Border>
+        <DataGrid Grid.Column="1" Grid.Row="1" Grid.RowSpan="4" CanUserAddRows="True" CanUserDeleteRows="True" Name="DataGrid_Parameters">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Name (Stars with @)" Width="*"/>
+                <DataGridTextColumn Header="Test Value" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
     </Grid>
 </Window>
