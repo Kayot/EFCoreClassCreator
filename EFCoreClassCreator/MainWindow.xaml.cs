@@ -22,7 +22,7 @@ namespace EFCoreClassCreator
             DataTable schemaTable;
             List<DataArray> DataExtract = new();
             string MyPreFix = "";
-            if (RadioButton_MySQL.IsChecked==true)
+            if (RadioButton_MySQL.IsChecked == true)
             {
                 MyPreFix = "My";
                 using (MySqlConnection DBConnection = new MySqlConnection(TextBox_Login_Details.Text))
@@ -35,7 +35,7 @@ namespace EFCoreClassCreator
                         schemaTable = DBReader.GetSchemaTable();
                         DBConnection.Close();
                     }
-                }                
+                }
                 foreach (DataRow item in schemaTable.Rows)
                 {
                     DataExtract.Add(new DataArray()
@@ -59,7 +59,7 @@ namespace EFCoreClassCreator
                         schemaTable = DBReader.GetSchemaTable();
                         DBConnection.Close();
                     }
-                }               
+                }
                 foreach (DataRow item in schemaTable.Rows)
                 {
                     DataExtract.Add(new DataArray()
@@ -71,9 +71,7 @@ namespace EFCoreClassCreator
                     });
                 }
             }
-
             StringBuilder Output = new();
-
             if (RadioButton_MySQL.IsChecked == true)
             {
                 Output.AppendLine($"using MySql.Data.MySqlClient;");
@@ -82,28 +80,55 @@ namespace EFCoreClassCreator
             {
                 Output.AppendLine($"using System.Data.SqlClient;");
             }
-
             Output.AppendLine("using System;");
             Output.AppendLine("using System.Collections.Generic;");
             Output.AppendLine();
-
             Output.AppendLine("namespace " + TextBox_Namespace.Text);
             Output.AppendLine("{");
-            Output.AppendLine("public static class " + TextBox_ClassName.Text);
+            Output.AppendLine("public class " + TextBox_ClassName.Text);
             Output.AppendLine("{");
-            Output.AppendLine($"public static List<data{TextBox_ClassName.Text}> DN{TextBox_ClassName.Text}()");
+            Dictionary<string, string> TypeConv = new();
+            TypeConv.Add("System.String", "string");
+            TypeConv.Add("System.SByte", "sbyte");
+            TypeConv.Add("System.Int32", "int");
+            TypeConv.Add("System.DateTime", "DateTime");
+            foreach (var item in DataExtract)
+            {
+                string NullMark = "";
+                if (item.ColNullable && item.ColType != "System.String") { NullMark = "?"; }
+                if (TypeConv.ContainsKey(item.ColType))
+                {
+                    if (item.ColType == "System.SByte" && item.ColLength == 1)
+                    {
+                        Output.AppendLine($"\tpublic bool{NullMark} " + item.ColName + " { get; set; } // Length: " + item.ColLength);
+                    }
+                    else
+                    {
+                        Output.AppendLine("\tpublic " + TypeConv[item.ColType] + $"{NullMark} " + item.ColName + " { get; set; } // Length: " + item.ColLength);
+                    }
+                }
+                else
+                {
+                    Output.AppendLine($"// No Key Match to {NullMark} {item.ColType} {item.ColName}");
+                }
+            }
+            Output.AppendLine();
+            Output.AppendLine($"public static List<{TextBox_ClassName.Text}> Load()");
             Output.AppendLine("{");
-            Output.AppendLine($"List<data{TextBox_ClassName.Text}> Data = new List<data{TextBox_ClassName.Text}>();");
+            Output.AppendLine($"List<{TextBox_ClassName.Text}> Data = new List<{TextBox_ClassName.Text}>();");
             Output.AppendLine($"string ConnectionString = \"{TextBox_Login_Details.Text}\";");
             Output.AppendLine($"using ({MyPreFix}SqlConnection DBConnection = new {MyPreFix}SqlConnection(ConnectionString))");
             Output.AppendLine("{");
             Output.AppendLine("DBConnection.Open();");
             Output.AppendLine($"{MyPreFix}SqlCommand DataCommand = new {MyPreFix}SqlCommand(@\"{TextBox_SQLCode.Text}\", DBConnection);");
             Output.AppendLine("//DataCommand.Parameters.AddWithValue(\"@\", \"\");");
+
+            //Parameter Builder Goes Here
+
             Output.AppendLine($"{MyPreFix}SqlDataReader DataReader = DataCommand.ExecuteReader();");
             Output.AppendLine("while (DataReader.Read())");
             Output.AppendLine("{");
-            Output.AppendLine($"Data.Add(new data{TextBox_ClassName.Text}()");
+            Output.AppendLine($"Data.Add(new {TextBox_ClassName.Text}()");
             Output.AppendLine("{");
             List<string> Params = new();
             foreach (var item in DataExtract)
@@ -133,7 +158,7 @@ namespace EFCoreClassCreator
                         //Params.Add(item.ColName + " = myReader.GetDateTime(\"" + item.ColName + "\")");
                         //DataReader.GetOrdinal("column")
 
-                        Params.Add(item.ColName + " = DataReader[\""+ item.ColName + "\"] != DBNull.Value ? DataReader.GetDateTime(DataReader.GetOrdinal(\"" + item.ColName + "\")) : (DateTime?)null");
+                        Params.Add(item.ColName + " = DataReader[\"" + item.ColName + "\"] != DBNull.Value ? DataReader.GetDateTime(DataReader.GetOrdinal(\"" + item.ColName + "\")) : (DateTime?)null");
 
                         break;
                     default:
@@ -141,9 +166,7 @@ namespace EFCoreClassCreator
                         break;
                 }
             }
-
             Output.AppendLine(string.Join(",\n", Params));
-
             Output.AppendLine("});");
             Output.AppendLine("}");
             Output.AppendLine("DataReader.Close();");
@@ -151,42 +174,6 @@ namespace EFCoreClassCreator
             Output.AppendLine("}");
             Output.AppendLine("return Data;");
             Output.AppendLine("}");
-            Output.AppendLine("}");
-
-            //Handles the Class for data storage
-
-            Dictionary<string, string> TypeConv = new();
-            TypeConv.Add("System.String", "string");
-            TypeConv.Add("System.SByte", "sbyte");
-            TypeConv.Add("System.Int32", "int");
-            TypeConv.Add("System.DateTime", "DateTime");
-            //TypeConv.Add("System.", "");
-            //TypeConv.Add("System.", "");
-
-            Output.AppendLine("public class data" + TextBox_ClassName.Text);
-            Output.AppendLine("{");
-
-            foreach (var item in DataExtract)
-            {
-                string NullMark = "";
-                if (item.ColNullable && item.ColType != "System.String") { NullMark = "?"; }
-
-                if (TypeConv.ContainsKey(item.ColType))
-                {
-                    if (item.ColType == "System.SByte" && item.ColLength == 1)
-                    {
-                        Output.AppendLine($"\tpublic bool{NullMark} " + item.ColName + " { get; set; } // Length: " + item.ColLength);
-                    }
-                    else
-                    {
-                        Output.AppendLine("\tpublic " + TypeConv[item.ColType] + $"{NullMark} " + item.ColName + " { get; set; } // Length: " + item.ColLength);
-                    }
-                }
-                else
-                {
-                    Output.AppendLine($"// No Key Match to {NullMark} {item.ColType} {item.ColName}");
-                }
-            }
             Output.AppendLine("}");
             Output.AppendLine("}");
             TextBox_ClassCode.Text = Output.ToString();
