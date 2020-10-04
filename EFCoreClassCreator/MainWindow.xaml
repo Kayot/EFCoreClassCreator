@@ -7,62 +7,75 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="768" Width="1024" Loaded="Window_Loaded">
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="22"/>
-            <RowDefinition Height="22"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="22"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="70*"/>
-            <ColumnDefinition Width="30*"/>
+            <ColumnDefinition Width="65*"/>
+            <ColumnDefinition Width="35*"/>
         </Grid.ColumnDefinitions>
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="80"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <Border BorderBrush="Black" BorderThickness="1">
-                <TextBlock Text="Login Details"/>
-            </Border>
-            <TextBox Grid.Column="1" Name="TextBox_Login_Details" Text="" />
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="22"/>
+                <RowDefinition Height="22"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="22"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="80"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Border BorderBrush="Black" BorderThickness="1">
+                    <TextBlock Text="Login Details"/>
+                </Border>
+                <TextBox Grid.Column="1" Name="TextBox_Login_Details" Text="" />
+            </Grid>
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="70"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="40"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="50"/>
+                    <ColumnDefinition Width="70"/>
+                    <ColumnDefinition Width="70"/>
+                </Grid.ColumnDefinitions>
+                <Border BorderBrush="Black" BorderThickness="1">
+                    <TextBlock Text="namespace"/>
+                </Border>
+                <TextBox Name="TextBox_Namespace" Grid.Column="1"/>
+                <Border Grid.Column="2" BorderBrush="Black" BorderThickness="1">
+                    <TextBlock Text="class"/>
+                </Border>
+                <TextBox Name="TextBox_ClassName" Grid.Column="3"/>
+                <Border Grid.Column="4" BorderBrush="Black" BorderThickness="1">
+                    <TextBlock Text="DB Type"/>
+                </Border>
+                <RadioButton Grid.Column="5" GroupName="DBType" Name="RadioButton_MySQL" Content="MySQL" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="True"/>
+                <RadioButton Grid.Column="6" GroupName="DBType" Name="RadioButton_MSSQL" Content="MSSQL" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Grid>
+            <TextBox Grid.Row="2" Name="TextBox_SQLCode" AcceptsReturn="True" AcceptsTab="True" />
+            <Button Grid.Row="3" Content="Generate Class Code" Click="Button_Generate_Class_Code_Click" />
+            <TextBox Grid.Row="4" Name="TextBox_ClassCode" AcceptsReturn="True" AcceptsTab="True" FontFamily="Courier New"  />
         </Grid>
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="70"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="40"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="50"/>
-                <ColumnDefinition Width="70"/>
-                <ColumnDefinition Width="70"/>
-            </Grid.ColumnDefinitions>
-            <Border BorderBrush="Black" BorderThickness="1">
-                <TextBlock Text="namespace"/>
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="22"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="22"/>
+            </Grid.RowDefinitions>
+            <Border Grid.Column="1" Grid.Row="0" BorderBrush="Black" BorderThickness="1">
+                <TextBlock Text="Parameters"/>
             </Border>
-            <TextBox Name="TextBox_Namespace" Grid.Column="1"/>
-            <Border Grid.Column="2" BorderBrush="Black" BorderThickness="1">
-                <TextBlock Text="class"/>
-            </Border>
-            <TextBox Name="TextBox_ClassName" Grid.Column="3"/>
-            <Border Grid.Column="4" BorderBrush="Black" BorderThickness="1">
-                <TextBlock Text="DB Type"/>
-            </Border>
-            <RadioButton Grid.Column="5" GroupName="DBType" Name="RadioButton_MySQL" Content="MySQL" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="True"/>
-            <RadioButton Grid.Column="6" GroupName="DBType" Name="RadioButton_MSSQL" Content="MSSQL" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <DataGrid Grid.Column="1" AutoGenerateColumns="False" Name="DataGrid_Parameters" Grid.Row="1" Grid.RowSpan="1" CanUserAddRows="True" CanUserDeleteRows="True" >
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Name (Stars with @)" Binding="{Binding ColName}" Width="*"/>
+                    <DataGridTextColumn Header="Test Value" Binding="{Binding ColTest}" Width="*"/>
+                    <DataGridTextColumn Header="Type" Binding="{Binding ColType}" Width="*"/>
+                    <!--<DataGridComboBoxColumn Header="Type" Width="*" SelectedItemBinding="{Binding Status}" ItemsSource="{Binding Source={StaticResource OrderStatus}}"  />-->
+                </DataGrid.Columns>
+            </DataGrid>
+            <!--<Button Grid.Row="2" Content="Test Parameters" Click="Button_Test_Parameters_Click"/>-->
+            <Button Grid.Row="2" Content="Clear List" Click="Button_Clear_List_Click"/>
         </Grid>
-        <TextBox Grid.Row="2" Name="TextBox_SQLCode" AcceptsReturn="True" AcceptsTab="True" />
-        <Button Grid.Row="3" Content="Generate Class Code" Click="Button_Generate_Class_Code_Click" />
-        <TextBox Grid.Row="4" Name="TextBox_ClassCode" AcceptsReturn="True" AcceptsTab="True" FontFamily="Courier New"  />
-        <Border Grid.Column="1" Grid.Row="0" BorderBrush="Black" BorderThickness="1">
-            <TextBlock Text="Parameters"/>
-        </Border>
-        <DataGrid Grid.Column="1" Grid.Row="1" Grid.RowSpan="4" CanUserAddRows="True" CanUserDeleteRows="True" Name="DataGrid_Parameters">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Name (Stars with @)" Width="*"/>
-                <DataGridTextColumn Header="Test Value" Width="*"/>
-            </DataGrid.Columns>
-        </DataGrid>
     </Grid>
 </Window>

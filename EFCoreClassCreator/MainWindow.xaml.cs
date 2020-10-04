@@ -5,7 +5,6 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Text;
 using System.Windows;
-using System.Windows.Documents;
 
 namespace EFCoreClassCreator
 {
@@ -15,7 +14,7 @@ namespace EFCoreClassCreator
     public partial class MainWindow : Window
     {
         public MainWindow() => InitializeComponent();
-        public List<string> Parameters = new List<string>();
+        public List<ParametersListItems> Parameters = new();
 
         private void Button_Generate_Class_Code_Click(object sender, RoutedEventArgs e)
         {
@@ -29,6 +28,13 @@ namespace EFCoreClassCreator
                 {
                     using (MySqlCommand DBCommand = new MySqlCommand(TextBox_SQLCode.Text, DBConnection))
                     {
+                        foreach (ParametersListItems item in Parameters)
+                        {
+                            if (item.ColName.Length > 0)
+                            {
+                                DBCommand.Parameters.AddWithValue("@" + item.ColName, item.ColTest);
+                            }
+                        }
                         DBConnection.Open();
                         MySqlDataReader DBReader;
                         DBReader = DBCommand.ExecuteReader(CommandBehavior.KeyInfo);
@@ -53,6 +59,13 @@ namespace EFCoreClassCreator
                 {
                     using (SqlCommand DBCommand = new SqlCommand(TextBox_SQLCode.Text, DBConnection))
                     {
+                        foreach (ParametersListItems item in Parameters)
+                        {
+                            if (item.ColName.Length > 0)
+                            {
+                                DBCommand.Parameters.AddWithValue("@" + item.ColName, item.ColTest);
+                            }
+                        }
                         DBConnection.Open();
                         SqlDataReader DBReader;
                         DBReader = DBCommand.ExecuteReader(CommandBehavior.KeyInfo);
@@ -92,7 +105,7 @@ namespace EFCoreClassCreator
             TypeConv.Add("System.SByte", "sbyte");
             TypeConv.Add("System.Int32", "int");
             TypeConv.Add("System.DateTime", "DateTime");
-            foreach (var item in DataExtract)
+            foreach (DataArray item in DataExtract)
             {
                 string NullMark = "";
                 if (item.ColNullable && item.ColType != "System.String") { NullMark = "?"; }
@@ -113,7 +126,15 @@ namespace EFCoreClassCreator
                 }
             }
             Output.AppendLine();
-            Output.AppendLine($"public static List<{TextBox_ClassName.Text}> Load()");
+            List<string> LoadParam = new();
+            foreach (ParametersListItems item in Parameters)
+            {
+                if (item.ColName.Length > 0)
+                {
+                    LoadParam.Add($"{item.ColType} {item.ColName}");
+                }
+            }
+            Output.AppendLine($"public static List<{TextBox_ClassName.Text}> Load({string.Join(",", LoadParam)})");
             Output.AppendLine("{");
             Output.AppendLine($"List<{TextBox_ClassName.Text}> Data = new List<{TextBox_ClassName.Text}>();");
             Output.AppendLine($"string ConnectionString = \"{TextBox_Login_Details.Text}\";");
@@ -121,17 +142,20 @@ namespace EFCoreClassCreator
             Output.AppendLine("{");
             Output.AppendLine("DBConnection.Open();");
             Output.AppendLine($"{MyPreFix}SqlCommand DataCommand = new {MyPreFix}SqlCommand(@\"{TextBox_SQLCode.Text}\", DBConnection);");
-            Output.AppendLine("//DataCommand.Parameters.AddWithValue(\"@\", \"\");");
-
-            //Parameter Builder Goes Here
-
+            foreach (ParametersListItems item in Parameters)
+            {
+                if (item.ColName.Length > 0)
+                {
+                    Output.AppendLine($"DataCommand.Parameters.AddWithValue(\"@{item.ColName}\", \"{item.ColName}\");");
+                }
+            }
             Output.AppendLine($"{MyPreFix}SqlDataReader DataReader = DataCommand.ExecuteReader();");
             Output.AppendLine("while (DataReader.Read())");
             Output.AppendLine("{");
             Output.AppendLine($"Data.Add(new {TextBox_ClassName.Text}()");
             Output.AppendLine("{");
             List<string> Params = new();
-            foreach (var item in DataExtract)
+            foreach (DataArray item in DataExtract)
             {
 
                 //RETSLockLastUpdated = DataReader["RETSLockLastUpdated"] != DBNull.Value ? DataReader.GetDateTime("RETSLockLastUpdated") : null,
@@ -179,7 +203,14 @@ namespace EFCoreClassCreator
             TextBox_ClassCode.Text = Output.ToString();
         }
 
-        class DataArray
+        public class ParametersListItems
+        {
+            public string ColName { get; set; }
+            public string ColTest { get; set; }
+            public string ColType { get; set; }
+        }
+
+        public class DataArray
         {
             public string ColName { get; set; }
             public string ColType { get; set; }
@@ -187,12 +218,33 @@ namespace EFCoreClassCreator
             public bool ColNullable { get; set; }
         }
 
+        public enum OrderStatus { None, New, Processing, Shipped, Received };
+
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             if (System.IO.File.Exists("settings.ini"))
             {
-                TextBox_Login_Details.Text = System.IO.File.ReadAllText("settings.ini");
+                string[] Lines = System.IO.File.ReadAllLines("settings.ini");
+                foreach (string Line in Lines)
+                {
+                    if (Line.Contains('='))
+                    {
+                        string[] split = Line.Split('=');
+                        if (split[0] == "TextBox_Login_Details") { TextBox_Login_Details.Text = Line.Replace("TextBox_Login_Details=", ""); }
+                        if (split[0] == "TextBox_Namespace") { TextBox_Namespace.Text = split[1]; }
+                        if (split[0] == "TextBox_ClassName") { TextBox_ClassName.Text = split[1]; }
+                        if (split[0] == "DBType" && split[1] == "0") { RadioButton_MySQL.IsChecked = true; }
+                        if (split[0] == "DBType" && split[1] == "1") { RadioButton_MSSQL.IsChecked = true; }
+                    }
+                }
             }
+            DataGrid_Parameters.ItemsSource = Parameters;
+        }
+
+        private void Button_Clear_List_Click(object sender, RoutedEventArgs e)
+        {
+            Parameters.Clear();
+            DataGrid_Parameters.ItemsSource = null;
             DataGrid_Parameters.ItemsSource = Parameters;
         }
     }
