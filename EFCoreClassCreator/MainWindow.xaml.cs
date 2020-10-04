@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Windows;
 
@@ -43,16 +44,16 @@ namespace EFCoreClassCreator
                         DBConnection.Close();
                     }
                 }
-                foreach (DataRow item in schemaTable.Rows)
-                {
-                    DataExtract.Add(new DataArray()
-                    {
-                        ColName = item.ItemArray[0].ToString(),
-                        ColType = item.ItemArray[11].ToString(),
-                        ColLength = Convert.ToInt32(item.ItemArray[2]),
-                        ColNullable = Convert.ToBoolean(item.ItemArray[12])
-                    });
-                }
+                //foreach (DataRow item in schemaTable.Rows)
+                //{
+                //    DataExtract.Add(new DataArray()
+                //    {
+                //        ColName = item.ItemArray[0].ToString(),
+                //        ColType = item.ItemArray[11].ToString(),
+                //        ColLength = Convert.ToInt32(item.ItemArray[2]),
+                //        ColNullable = Convert.ToBoolean(item.ItemArray[12])
+                //    });
+                //}
             }
             else
             {
@@ -74,17 +75,33 @@ namespace EFCoreClassCreator
                         DBConnection.Close();
                     }
                 }
-                foreach (DataRow item in schemaTable.Rows)
-                {
-                    DataExtract.Add(new DataArray()
-                    {
-                        ColName = item.ItemArray[0].ToString(),
-                        ColType = item.ItemArray[12].ToString(),
-                        ColLength = Convert.ToInt32(item.ItemArray[2]),
-                        ColNullable = Convert.ToBoolean(item.ItemArray[13])
-                    });
-                }
+                //foreach (DataRow item in schemaTable.Rows)
+                //{
+                //    DataExtract.Add(new DataArray()
+                //    {
+                //        ColName = item.ItemArray[0].ToString(),
+                //        ColType = item.ItemArray[12].ToString(),
+                //        ColLength = Convert.ToInt32(item.ItemArray[2]),
+                //        ColNullable = Convert.ToBoolean(item.ItemArray[13])
+                //    });
+                //}
             }
+
+
+            foreach (DataRow item in schemaTable.Rows)
+            {
+                DataExtract.Add(new DataArray()
+                {
+                    ColName = item.ItemArray[0].ToString(),
+                    ColType = item.ItemArray[12].ToString(),
+                    ColLength = Convert.ToInt32(item.ItemArray[2]),
+                    ColNullable = Convert.ToBoolean(item.ItemArray[13])
+                });
+            }
+
+
+
+
             StringBuilder Output = new();
             if (RadioButton_MySQL.IsChecked == true)
             {
@@ -94,13 +111,16 @@ namespace EFCoreClassCreator
             {
                 Output.AppendLine($"using System.Data.SqlClient;");
             }
-            Output.AppendLine("using System;");
-            Output.AppendLine("using System.Collections.Generic;");
-            Output.AppendLine();
-            Output.AppendLine("namespace " + TextBox_Namespace.Text);
-            Output.AppendLine("{");
-            Output.AppendLine("public class " + TextBox_ClassName.Text);
-            Output.AppendLine("{");
+
+            //Output.AppendLine("using System;");
+            //Output.AppendLine("using System.Collections.Generic;");
+            //Output.AppendLine();
+            //Output.AppendLine("namespace " + TextBox_Namespace.Text);
+            //Output.AppendLine("{");
+            //Output.AppendLine("public class " + TextBox_ClassName.Text);
+            //Output.AppendLine("{");          
+            Output.Append($"using System;\r\nusing System.Collections.Generic;\r\n\r\nnamespace {TextBox_Namespace.Text}\r\n{{\r\npublic class {TextBox_ClassName.Text}\r\n{{");
+
             Dictionary<string, string> TypeConv = new();
             TypeConv.Add("System.String", "string");
             TypeConv.Add("System.SByte", "sbyte");
@@ -138,14 +158,18 @@ namespace EFCoreClassCreator
                     LoadParam.Add($"{item.ColType} {item.ColName}");
                 }
             }
-            Output.AppendLine($"public static List<{TextBox_ClassName.Text}> Load({string.Join(",", LoadParam)})");
-            Output.AppendLine("{");
-            Output.AppendLine($"List<{TextBox_ClassName.Text}> Data = new List<{TextBox_ClassName.Text}>();");
-            Output.AppendLine($"string ConnectionString = \"{TextBox_Login_Details.Text}\";");
-            Output.AppendLine($"using ({MyPreFix}SqlConnection DBConnection = new {MyPreFix}SqlConnection(ConnectionString))");
-            Output.AppendLine("{");
-            Output.AppendLine("DBConnection.Open();");
-            Output.AppendLine($"{MyPreFix}SqlCommand DataCommand = new {MyPreFix}SqlCommand(@\"{TextBox_SQLCode.Text}\", DBConnection);");
+            //Output.AppendLine($"public static List<{TextBox_ClassName.Text}> Load({string.Join(",", LoadParam)})");
+            //Output.AppendLine("{");
+            //Output.AppendLine($"List<{TextBox_ClassName.Text}> Data = new List<{TextBox_ClassName.Text}>();");
+            //Output.AppendLine($"string ConnectionString = \"{TextBox_Login_Details.Text}\";");
+            //Output.AppendLine($"using ({MyPreFix}SqlConnection DBConnection = new {MyPreFix}SqlConnection(ConnectionString))");
+            //Output.AppendLine("{");
+            //Output.AppendLine("DBConnection.Open();");
+            //Output.AppendLine($"{MyPreFix}SqlCommand DataCommand = new {MyPreFix}SqlCommand(@\"{TextBox_SQLCode.Text}\", DBConnection);");
+
+            //\r\n
+            Output.Append($"\r\npublic static List<{TextBox_ClassName.Text}> Load({string.Join(",", LoadParam)})\r\n{{\r\nList<{TextBox_ClassName.Text}> Data = new List<{TextBox_ClassName.Text}>();\r\nstring ConnectionString = \"{TextBox_Login_Details.Text}\";\r\nusing ({MyPreFix}SqlConnection DBConnection = new {MyPreFix}SqlConnection(ConnectionString))\r\n{{\r\nDBConnection.Open();\r\n{MyPreFix}SqlCommand DataCommand = new {MyPreFix}SqlCommand(@\"{TextBox_SQLCode.Text}\", DBConnection);\r\n");
+
             foreach (ParametersListItems item in Parameters)
             {
                 if (item.ColName.Length > 0)
@@ -153,36 +177,22 @@ namespace EFCoreClassCreator
                     Output.AppendLine($"DataCommand.Parameters.AddWithValue(\"@{item.ColName}\", {item.ColName});");
                 }
             }
-            Output.AppendLine($"{MyPreFix}SqlDataReader DataReader = DataCommand.ExecuteReader();");
-            Output.AppendLine("while (DataReader.Read())");
-            Output.AppendLine("{");
-            Output.AppendLine($"Data.Add(new {TextBox_ClassName.Text}()");
-            Output.AppendLine("{");
+            //Output.AppendLine($"{MyPreFix}SqlDataReader DataReader = DataCommand.ExecuteReader();");
+            //Output.AppendLine("while (DataReader.Read())");
+            //Output.AppendLine("{");
+            //Output.AppendLine($"Data.Add(new {TextBox_ClassName.Text}()");
+            //Output.AppendLine("{");
+
+            Output.AppendLine($"\r\n{MyPreFix}SqlDataReader DataReader = DataCommand.ExecuteReader();\r\nwhile (DataReader.Read())\r\n{{\r\nData.Add(new {TextBox_ClassName.Text}()\r\n{{\r\n");
+
             List<string> Params = new();
             foreach (DataArray item in DataExtract)
             {
-
-                //RETSLockLastUpdated = DataReader["RETSLockLastUpdated"] != DBNull.Value ? DataReader.GetDateTime("RETSLockLastUpdated") : null,
-                //DataReader.GetOrdinal("Info_Recorded")
                 string InputColumnName = item.ColName;
-                if (RadioButton_MSSQL.IsChecked == true)
-                {
-                    InputColumnName=  $"DataReader.GetOrdinal(\"{InputColumnName}\")";
-
-                }
-                else
-                {
-                    InputColumnName = "\"" + item.ColName + "";
-                }
-
+                if (RadioButton_MSSQL.IsChecked == true) { InputColumnName = $"DataReader.GetOrdinal(\"{InputColumnName}\")"; } else { InputColumnName = "\"" + item.ColName + ""; }
                 switch (item.ColType)
                 {
-
-
-
-                    case "System.String":
-                        Params.Add(item.ColName + " = DataReader[\"" + item.ColName + "\"].ToString()");
-                        break;
+                    case "System.String": Params.Add(item.ColName + " = DataReader[\"" + item.ColName + "\"].ToString()"); break;
                     case "System.SByte":
                         if (item.ColLength == 1)
                         {
@@ -193,39 +203,36 @@ namespace EFCoreClassCreator
                             Params.Add(item.ColName + " = DataReader.GetInt16(\"" + InputColumnName + "\")");
                         }
                         break;
-                    case "System.Int32":
-                        Params.Add(item.ColName + " = DataReader.GetInt32(" + InputColumnName + ")");
-                        break;
+                    case "System.Int32": Params.Add(item.ColName + " = DataReader.GetInt32(" + InputColumnName + ")"); break;
                     case "System.DateTime":
-                        //Params.Add(item.ColName + " = myReader.GetDateTime(\"" + item.ColName + "\")");
-                        //DataReader.GetOrdinal("column")
-
                         Params.Add(item.ColName + " = DataReader[\"" + item.ColName + "\"] != DBNull.Value ? DataReader.GetDateTime(DataReader.GetOrdinal(\"" + item.ColName + "\")) : (DateTime?)null");
                         break;
-                    case "System.Int16":
-                        Params.Add(item.ColName + " = DataReader.GetInt16(" + InputColumnName + ")");
-                        break;
-                    case "System.Boolean":
-                        Params.Add(item.ColName + " = DataReader[\"" + item.ColName + "\"].ToString() == \"1\"");
-                        break;
-                    case "System.Decimal":
-                        Params.Add(item.ColName + " = DataReader.GetDecimal(" + InputColumnName + ")");
-                        break;
-                    default:
-                        Params.Add($"// No Key Match to {item.ColType} {item.ColName}");
-                        break;
+                    case "System.Int16": Params.Add(item.ColName + " = DataReader.GetInt16(" + InputColumnName + ")"); break;
+                    case "System.Boolean": Params.Add(item.ColName + " = DataReader[\"" + item.ColName + "\"].ToString() == \"1\""); break;
+                    case "System.Decimal": Params.Add(item.ColName + " = DataReader.GetDecimal(" + InputColumnName + ")"); break;
+                    default: Params.Add($"// No Key Match to {item.ColType} {item.ColName}"); break;
                 }
             }
-            Output.AppendLine(string.Join(",\n", Params));
-            Output.AppendLine("});");
-            Output.AppendLine("}");
-            Output.AppendLine("DataReader.Close();");
-            Output.AppendLine("DBConnection.Close();");
-            Output.AppendLine("}");
-            Output.AppendLine("return Data;");
-            Output.AppendLine("}");
-            Output.AppendLine("}");
-            Output.AppendLine("}");
+            Output.AppendLine(string.Join(",\r\n", Params));
+
+
+            //Output.AppendLine("});");
+            //Output.AppendLine("}");
+            //Output.AppendLine("DataReader.Close();");
+            //Output.AppendLine("DBConnection.Close();");
+            //Output.AppendLine("}");
+            //Output.AppendLine("return Data;");
+            //Output.AppendLine("}");
+            //Output.AppendLine("}");
+            //Output.AppendLine("}");
+
+            /*
+             
+
+             */
+
+
+            Output.Append("\r\n});\r\n}\r\nDataReader.Close();\r\nDBConnection.Close();\r\n}\r\nreturn Data;\r\n}\r\n}\r\n}");
             TextBox_ClassCode.Text = Output.ToString();
         }
 
@@ -244,7 +251,7 @@ namespace EFCoreClassCreator
             public bool ColNullable { get; set; }
         }
 
-        public enum OrderStatus { None, New, Processing, Shipped, Received };
+        //public enum OrderStatus { None, New, Processing, Shipped, Received };
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
