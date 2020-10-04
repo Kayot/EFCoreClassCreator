@@ -18,6 +18,7 @@
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="22"/>
                 <RowDefinition Height="*"/>
+                <RowDefinition Height="22"/>
             </Grid.RowDefinitions>
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -53,9 +54,19 @@
                 <RadioButton Grid.Column="5" GroupName="DBType" Name="RadioButton_MySQL" Content="MySQL" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="True"/>
                 <RadioButton Grid.Column="6" GroupName="DBType" Name="RadioButton_MSSQL" Content="MSSQL" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Grid>
-            <TextBox Grid.Row="2" Name="TextBox_SQLCode" AcceptsReturn="True" AcceptsTab="True" />
+            <TextBox Grid.Row="2" Name="TextBox_SQLCode" AcceptsReturn="True" AcceptsTab="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" FontFamily="Courier New"/>
             <Button Grid.Row="3" Content="Generate Class Code" Click="Button_Generate_Class_Code_Click" />
-            <TextBox Grid.Row="4" Name="TextBox_ClassCode" AcceptsReturn="True" AcceptsTab="True" FontFamily="Courier New"  />
+            <TextBox Grid.Row="4" Name="TextBox_ClassCode" AcceptsReturn="True" AcceptsTab="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" FontFamily="Courier New"/>
+            <Grid Grid.Row="5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Button Content="Save Setup File" Click="Button_Save_Setup_File_Click" />
+                <Button Content="Load Setup File" Click="Button_Load_Setup_File_Click" Grid.Column="1" />
+                <Button Content="Save Class File" Click="Button_Save_Class_File_Click" Grid.Column="2" />
+            </Grid>
         </Grid>
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
