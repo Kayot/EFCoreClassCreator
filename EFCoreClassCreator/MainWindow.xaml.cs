@@ -44,16 +44,6 @@ namespace EFCoreClassCreator
                         DBConnection.Close();
                     }
                 }
-                //foreach (DataRow item in schemaTable.Rows)
-                //{
-                //    DataExtract.Add(new DataArray()
-                //    {
-                //        ColName = item.ItemArray[0].ToString(),
-                //        ColType = item.ItemArray[11].ToString(),
-                //        ColLength = Convert.ToInt32(item.ItemArray[2]),
-                //        ColNullable = Convert.ToBoolean(item.ItemArray[12])
-                //    });
-                //}
             }
             else
             {
@@ -75,19 +65,7 @@ namespace EFCoreClassCreator
                         DBConnection.Close();
                     }
                 }
-                //foreach (DataRow item in schemaTable.Rows)
-                //{
-                //    DataExtract.Add(new DataArray()
-                //    {
-                //        ColName = item.ItemArray[0].ToString(),
-                //        ColType = item.ItemArray[12].ToString(),
-                //        ColLength = Convert.ToInt32(item.ItemArray[2]),
-                //        ColNullable = Convert.ToBoolean(item.ItemArray[13])
-                //    });
-                //}
             }
-
-
             foreach (DataRow item in schemaTable.Rows)
             {
                 DataExtract.Add(new DataArray()
@@ -98,10 +76,6 @@ namespace EFCoreClassCreator
                     ColNullable = Convert.ToBoolean(item.ItemArray[13])
                 });
             }
-
-
-
-
             StringBuilder Output = new();
             if (RadioButton_MySQL.IsChecked == true)
             {
@@ -111,16 +85,7 @@ namespace EFCoreClassCreator
             {
                 Output.AppendLine($"using System.Data.SqlClient;");
             }
-
-            //Output.AppendLine("using System;");
-            //Output.AppendLine("using System.Collections.Generic;");
-            //Output.AppendLine();
-            //Output.AppendLine("namespace " + TextBox_Namespace.Text);
-            //Output.AppendLine("{");
-            //Output.AppendLine("public class " + TextBox_ClassName.Text);
-            //Output.AppendLine("{");          
-            Output.Append($"using System;\r\nusing System.Collections.Generic;\r\n\r\nnamespace {TextBox_Namespace.Text}\r\n{{\r\npublic class {TextBox_ClassName.Text}\r\n{{");
-
+            Output.Append($"using System;\r\nusing System.Collections.Generic;\r\n\r\nnamespace {TextBox_Namespace.Text}\r\n{{\r\npublic class {TextBox_ClassName.Text}\r\n{{\r\n");
             Dictionary<string, string> TypeConv = new();
             TypeConv.Add("System.String", "string");
             TypeConv.Add("System.SByte", "sbyte");
@@ -158,17 +123,11 @@ namespace EFCoreClassCreator
                     LoadParam.Add($"{item.ColType} {item.ColName}");
                 }
             }
-            //Output.AppendLine($"public static List<{TextBox_ClassName.Text}> Load({string.Join(",", LoadParam)})");
-            //Output.AppendLine("{");
-            //Output.AppendLine($"List<{TextBox_ClassName.Text}> Data = new List<{TextBox_ClassName.Text}>();");
-            //Output.AppendLine($"string ConnectionString = \"{TextBox_Login_Details.Text}\";");
-            //Output.AppendLine($"using ({MyPreFix}SqlConnection DBConnection = new {MyPreFix}SqlConnection(ConnectionString))");
-            //Output.AppendLine("{");
-            //Output.AppendLine("DBConnection.Open();");
-            //Output.AppendLine($"{MyPreFix}SqlCommand DataCommand = new {MyPreFix}SqlCommand(@\"{TextBox_SQLCode.Text}\", DBConnection);");
 
-            //\r\n
-            Output.Append($"\r\npublic static List<{TextBox_ClassName.Text}> Load({string.Join(",", LoadParam)})\r\n{{\r\nList<{TextBox_ClassName.Text}> Data = new List<{TextBox_ClassName.Text}>();\r\nstring ConnectionString = \"{TextBox_Login_Details.Text}\";\r\nusing ({MyPreFix}SqlConnection DBConnection = new {MyPreFix}SqlConnection(ConnectionString))\r\n{{\r\nDBConnection.Open();\r\n{MyPreFix}SqlCommand DataCommand = new {MyPreFix}SqlCommand(@\"{TextBox_SQLCode.Text}\", DBConnection);\r\n");
+            //Note -- I need 5 tabs in front of every SQL line, the rest of the code auto indents
+
+
+            Output.Append($"public static List<{TextBox_ClassName.Text}> Load({string.Join(",", LoadParam)})\r\n{{\r\nList<{TextBox_ClassName.Text}> Data = new List<{TextBox_ClassName.Text}>();\r\nstring ConnectionString = \"{TextBox_Login_Details.Text}\";\r\nusing ({MyPreFix}SqlConnection DBConnection = new {MyPreFix}SqlConnection(ConnectionString))\r\n{{\r\nDBConnection.Open();\r\n{MyPreFix}SqlCommand DataCommand = new {MyPreFix}SqlCommand(@\"\r\n{TextBox_SQLCode.Text.Trim()}\", DBConnection);\r\n");
 
             foreach (ParametersListItems item in Parameters)
             {
@@ -177,14 +136,7 @@ namespace EFCoreClassCreator
                     Output.AppendLine($"DataCommand.Parameters.AddWithValue(\"@{item.ColName}\", {item.ColName});");
                 }
             }
-            //Output.AppendLine($"{MyPreFix}SqlDataReader DataReader = DataCommand.ExecuteReader();");
-            //Output.AppendLine("while (DataReader.Read())");
-            //Output.AppendLine("{");
-            //Output.AppendLine($"Data.Add(new {TextBox_ClassName.Text}()");
-            //Output.AppendLine("{");
-
-            Output.AppendLine($"\r\n{MyPreFix}SqlDataReader DataReader = DataCommand.ExecuteReader();\r\nwhile (DataReader.Read())\r\n{{\r\nData.Add(new {TextBox_ClassName.Text}()\r\n{{\r\n");
-
+            Output.AppendLine($"\r\n{MyPreFix}SqlDataReader DataReader = DataCommand.ExecuteReader();\r\nwhile (DataReader.Read())\r\n{{\r\nData.Add(new {TextBox_ClassName.Text}()\r\n{{");
             List<string> Params = new();
             foreach (DataArray item in DataExtract)
             {
@@ -214,25 +166,7 @@ namespace EFCoreClassCreator
                 }
             }
             Output.AppendLine(string.Join(",\r\n", Params));
-
-
-            //Output.AppendLine("});");
-            //Output.AppendLine("}");
-            //Output.AppendLine("DataReader.Close();");
-            //Output.AppendLine("DBConnection.Close();");
-            //Output.AppendLine("}");
-            //Output.AppendLine("return Data;");
-            //Output.AppendLine("}");
-            //Output.AppendLine("}");
-            //Output.AppendLine("}");
-
-            /*
-             
-
-             */
-
-
-            Output.Append("\r\n});\r\n}\r\nDataReader.Close();\r\nDBConnection.Close();\r\n}\r\nreturn Data;\r\n}\r\n}\r\n}");
+            Output.Append("});\r\n}\r\nDataReader.Close();\r\nDBConnection.Close();\r\n}\r\nreturn Data;\r\n}\r\n}\r\n}");
             TextBox_ClassCode.Text = Output.ToString();
         }
 
@@ -250,8 +184,6 @@ namespace EFCoreClassCreator
             public int ColLength { get; set; }
             public bool ColNullable { get; set; }
         }
-
-        //public enum OrderStatus { None, New, Processing, Shipped, Received };
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
